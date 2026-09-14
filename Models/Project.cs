@@ -1,0 +1,52 @@
+using ConstructionCostEstimator.Data;
+using System.ComponentModel.DataAnnotations;
+
+namespace ConstructionCostEstimator.Models
+{
+    /// <summary>
+    /// Represents a single construction project managed by the estimator.
+    /// Each project belongs to an authenticated user and can contain multiple estimate-related records.
+    /// </summary>
+    public class Project
+    {
+        public int Id { get; set; }
+
+        [Required(ErrorMessage = "Project name is required.")]
+        [StringLength(100, ErrorMessage = "Project name cannot exceed 100 characters.")]
+        public string Name { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Description is required.")]
+        [StringLength(500, ErrorMessage = "Description cannot exceed 500 characters.")]
+        public string Description { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Start date is required.")]
+        public DateTime? StartDate { get; set; }
+
+        [Required(ErrorMessage = "End date is required.")]
+        public DateTime? EndDate { get; set; }
+
+        [Required(ErrorMessage = "Status is required.")]
+        public ProjectStatus Status { get; set; } = ProjectStatus.Planned;
+
+        public string ApplicationUserId { get; set; } = string.Empty;
+        public ApplicationUser? Owner { get; set; }
+
+        // Materials linked to this project.
+        public List<ProjectMaterial> ProjectMaterials { get; set; } = new();
+
+        // Labor entries linked to this project.
+        public List<ProjectLabor> ProjectLabors { get; set; } = new();
+
+        // Equipment items linked to this project.
+        public List<ProjectEquipment> ProjectEquipments { get; set; } = new();
+    }
+
+    public enum ProjectStatus
+    {
+        Planned,
+        Active,
+        Completed,
+        OnHold,
+        Cancelled
+    }
+}

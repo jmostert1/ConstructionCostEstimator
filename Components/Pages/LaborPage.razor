@@ -1,0 +1,142 @@
+@page "/labor/{ProjectId:int}"
+@rendermode InteractiveServer
+
+@using ConstructionCostEstimator.Models
+@using ConstructionCostEstimator.Services
+
+@inject LaborService LaborService
+
+<h3>
+    @(labor.Id == 0 ? "Add Labor" : "Edit Labor")
+</h3>
+
+<LaborForm LaborModel="labor"
+           OnSave="SaveLabor" />
+
+<hr />
+
+<table class="table table-striped">
+
+    <thead>
+
+        <tr>
+
+            <th>Description</th>
+            <th>Workers</th>
+            <th>Hours</th>
+            <th>Rate</th>
+            <th>Total</th>
+            <th></th>
+
+        </tr>
+
+    </thead>
+
+    <tbody>
+
+    @foreach(var item in labors)
+    {
+        <tr>
+
+            <td>@item.Description</td>
+
+            <td>@item.Workers</td>
+
+            <td>@item.Hours</td>
+
+            <td>@item.HourlyRate.ToString("C")</td>
+
+            <td>@item.TotalCost.ToString("C")</td>
+
+            <td>
+                <button class="btn btn-warning btn-sm me-2" 
+                        @onclick="() => EditLabor(item)">
+                    Edit
+                </button>
+
+                <button class="btn btn-danger btn-sm"
+                        @onclick="() => Delete(item.Id)">
+                    Delete
+                </button>
+
+            </td>
+
+        </tr>
+    }
+
+    </tbody>
+
+</table>
+
+<h4 class="text-end">
+    Total Labor:
+    @total.ToString("C")
+</h4>
+
+@code {
+
+    [Parameter]
+    public int ProjectId { get; set; }
+
+    private List<Labor> labors = new();
+    private Labor labor = new();
+    private decimal total;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Load();
+    }
+
+    private async Task Load()
+    {
+        labors = await LaborService.GetLaborAsync(ProjectId);
+        total = await LaborService.GetLaborTotalAsync(ProjectId);
+
+        if (labor.Id == 0)
+        {
+            labor = new Labor
+            {
+                ProjectId = ProjectId
+            };
+        }
+    }
+
+    private async Task SaveLabor(Labor laborItem)
+    {   
+        if (laborItem.ProjectId == 0)
+        {
+            Console.WriteLine("Cannot save Labor. ProjectId is missing.");
+            return;
+        }
+
+        if (laborItem.Id == 0)
+        {
+            await LaborService.AddLaborAsync(laborItem);
+        }
+        else
+        {
+            await LaborService.UpdateLaborAsync(laborItem);
+        }
+
+        await Load();
+    }
+
+    private async Task Delete(int id)
+    {
+        await LaborService.DeleteLaborAsync(id);
+        await Load();
+    }
+
+    private void EditLabor(Labor selectedLabor)
+    {
+        labor = new Labor
+        {
+            Id = selectedLabor.Id,
+            ProjectId = selectedLabor.ProjectId,
+            Description = selectedLabor.Description,
+            Workers = selectedLabor.Workers,
+            Hours = selectedLabor.Hours,
+            HourlyRate = selectedLabor.HourlyRate
+        };
+    }
+}
